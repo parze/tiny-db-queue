@@ -6,7 +6,7 @@ public interface DatabaseType {
 
     public boolean dataSourceBelongToType(JdbcTemplate jdbcTemplate);
 
-    public String getCreateQueueTableSql(String queueTableName);
+    public String getCreateQueueTableSql(String queueTableName, int maxJsonLength);
 
     public String getSqlSelectForUpdate(String queueTableName);
 

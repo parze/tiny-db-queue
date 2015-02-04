@@ -1,5 +1,6 @@
 package se.parze.sdbq;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -10,6 +11,7 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.sql.DataSource;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -21,16 +23,26 @@ public class Queue<T> {
 
     private PlatformTransactionManager platformTransactionManager;
     private String name;
+    private int maxJsonLength;
+    private Class<T> clazzOfItem;
     private DatabaseType databaseType;
     private JdbcTemplate jdbcTemplate;
+    private ObjectMapper mapper;
 
-    public Queue(DataSource dataSource, String name) {
-        this(dataSource, new DataSourceTransactionManager(dataSource), name);
+    public Queue(DataSource dataSource, Class<T> clazzOfItem) {
+        this(dataSource, 512, clazzOfItem, clazzOfItem.getName().replace('.', '_').toLowerCase());
     }
 
-    public Queue(DataSource dataSource, PlatformTransactionManager platformTransactionManager, String name) {
+    public Queue(DataSource dataSource, int maxJsonLength, Class<T> clazzOfItem, String queueName) {
+        this(dataSource, new DataSourceTransactionManager(dataSource), maxJsonLength, clazzOfItem, queueName);
+    }
+
+    public Queue(DataSource dataSource, PlatformTransactionManager platformTransactionManager, int maxJsonLength,  Class<T> clazzOfItem, String queueName) {
+        this.mapper = new ObjectMapper();
+        this.maxJsonLength = maxJsonLength;
+        this.clazzOfItem = clazzOfItem;
         this.platformTransactionManager = platformTransactionManager;
-        this.name = name;
+        this.name = queueName;
         this.databaseType = DatabaseTypeFactory.getDataBaseType(dataSource);
         this.jdbcTemplate = new JdbcTemplate(dataSource);
         createTableIfNotExists();
@@ -47,24 +59,39 @@ public class Queue<T> {
 
     private void createTableIfNotExists() {
         TransactionStatus status = createTransactionStatus();
-        jdbcTemplate.execute(databaseType.getCreateQueueTableSql(getQueueTableName()));
+        jdbcTemplate.execute(databaseType.getCreateQueueTableSql(getQueueTableName(), this.maxJsonLength));
         platformTransactionManager.commit(status);
     }
 
-    public void addItem(Long itemId) {
+    public void addItem(T item) {
         TransactionStatus status = createTransactionStatus();
-        jdbcTemplate.update("Insert Into " + getQueueTableName() + "(item_id, started_at) Values (?,?)", itemId, null);
+        jdbcTemplate.update("Insert Into " + getQueueTableName() + "(item, started_at) Values (?,?)", toJson(item), null);
         platformTransactionManager.commit(status);
+    }
 
+    private String toJson(T item) {
+        try {
+            return mapper.writeValueAsString(item);
+        } catch (IOException e) {
+            throw new SimpleDbQueueException("Failed to parse item to Json.", e);
+        }
+    }
+
+    private T fromJson(String str) {
+        try {
+            return mapper.readValue(str, this.clazzOfItem);
+        } catch (IOException e) {
+            throw new SimpleDbQueueException("Failed to parse item to Json.", e);
+        }
     }
 
     public long getQueueSize() {
         return (Long) jdbcTemplate.queryForMap("Select count(id) as c From "+getQueueTableName()).get("c");
     }
 
-    public LongIds getAndLockNextItem() {
+    public QueueItem<T> getAndLockNextItem() {
         Long id = null;
-        Long itemId = null;
+        String itemStr = null;
         TransactionStatus status = createTransactionStatus();
         String sql = databaseType.getSqlSelectForUpdate(getQueueTableName());
         List<Map<String, Object>> results = jdbcTemplate.queryForList(sql);
@@ -72,21 +99,21 @@ public class Queue<T> {
             id = (Long) results.get(0).get("id");
             sql = "Update "+getQueueTableName()+" Set started_at=? Where id=?";
             jdbcTemplate.update(sql, new Date(), id);
-            Map<String, Object> result = jdbcTemplate.queryForMap("Select item_id From "+getQueueTableName()+" Where id=?", id);
+            Map<String, Object> result = jdbcTemplate.queryForMap("Select item From "+getQueueTableName()+" Where id=?", id);
             if (result != null && result.size() > 0) {
-                itemId = (Long) result.get("item_id");
+                itemStr = (String) result.get("item");
             }
         }
         platformTransactionManager.commit(status);
-        if (id == null || itemId == null) {
+        if (id == null || itemStr == null) {
             return null;
         }
-        return new LongIds(id, itemId);
+        return new QueueItem<T>(id, fromJson(itemStr));
     }
 
-    public void removeItem(LongIds longIds) {
+    public void removeItem(QueueItem<T> queueItem) {
         TransactionStatus status = createTransactionStatus();
-        jdbcTemplate.update("Delete From " + getQueueTableName() + " Where id=?", longIds.getId());
+        jdbcTemplate.update("Delete From " + getQueueTableName() + " Where id=?", queueItem.getId());
         platformTransactionManager.commit(status);
     }
 

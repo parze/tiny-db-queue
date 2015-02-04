@@ -6,4 +6,7 @@ public class SimpleDbQueueException extends RuntimeException {
         super(msg);
     }
 
+    public SimpleDbQueueException(String msg, Exception e) {
+        super(msg, e);
+    }
 }

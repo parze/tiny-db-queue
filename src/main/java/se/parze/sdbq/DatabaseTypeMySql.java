@@ -14,10 +14,10 @@ public class DatabaseTypeMySql implements DatabaseType {
     }
 
     @Override
-    public String getCreateQueueTableSql(String queueTableName) {
+    public String getCreateQueueTableSql(String queueTableName, int maxJsonLength) {
         return "Create Table If Not Exists "+queueTableName+"("+
                 "id Bigint NOT NULL AUTO_INCREMENT, "+
-                "item_id Bigint Not NULL, "+
+                "item varchar("+maxJsonLength+") Not NULL, "+
                 "started_at Timestamp NULL, "+
                 "prio Integer, "+
                 "PRIMARY KEY (id))";
