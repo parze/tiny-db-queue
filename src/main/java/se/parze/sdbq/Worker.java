@@ -5,13 +5,13 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 
-public abstract class Agent {
+public abstract class Worker {
 
-    private Logger logger = LoggerFactory.getLogger(Agent.class);
+    private Logger logger = LoggerFactory.getLogger(se.parze.sdbq.Worker.class);
 
-    private Worker worker;
+    private WorkerThread workerThread;
 
-    private Object notifiesWhenAgentHasNewWork = new Object();
+    private Object notifiesWhenWorkerHasNewWork = new Object();
 
     private Object notifiesWhenAllWorkIsDone = new Object();
 
@@ -25,7 +25,7 @@ public abstract class Agent {
 
     private String name;
 
-    public Agent(String name) {
+    public Worker(String name) {
         this.name = name;
     }
 
@@ -33,15 +33,15 @@ public abstract class Agent {
         return this.name;
     }
 
-    public void startAgent() {
-        this.worker = new Worker();
-        this.worker.setDaemon(true);
+    public void startWorker() {
+        this.workerThread = new WorkerThread();
+        this.workerThread.setDaemon(true);
         this.shouldBeActive = true;
-        this.worker.start();
-        logger.info("Started agent " + getName());
+        this.workerThread.start();
+        logger.info("Started Worker " + getName());
     }
 
-    public void stopAgent() {
+    public void stopWorker() {
         shouldBeActive = false;
     }
 
@@ -49,10 +49,10 @@ public abstract class Agent {
         return workLastFinished;
     }
 
-    public void notifyAgentThatWorkIsReadyForProcessing() {
-        synchronized (notifiesWhenAgentHasNewWork) {
+    public void notifyWorkerThatWorkIsReadyForProcessing() {
+        synchronized (notifiesWhenWorkerHasNewWork) {
             workIsPendingForProcessing = true;
-            notifiesWhenAgentHasNewWork.notify();
+            notifiesWhenWorkerHasNewWork.notify();
         }
     }
 
@@ -70,18 +70,18 @@ public abstract class Agent {
     public abstract void computeWork();
 
 
-    public class Worker extends Thread {
+    public class WorkerThread extends Thread {
         @Override
         public void run() {
             while (shouldBeActive) {
-                synchronized (notifiesWhenAgentHasNewWork) {
+                synchronized (notifiesWhenWorkerHasNewWork) {
                     if (!workIsPendingForProcessing) {
                         synchronized (notifiesWhenAllWorkIsDone) {
                             notifiesWhenAllWorkIsDone.notifyAll();
                         }
                         try {
                             isWaiting = true;
-                            notifiesWhenAgentHasNewWork.wait();
+                            notifiesWhenWorkerHasNewWork.wait();
                             isWaiting = false;
                         } catch (InterruptedException e) {}
                     }
@@ -90,7 +90,7 @@ public abstract class Agent {
                 try {
                     computeWork();
                 } catch (Throwable e) {
-                    logger.error("Exception was thrown when agent "+getName()+" computing work.", e);
+                    logger.error("Exception was thrown when worker "+getName()+" computing work.", e);
                 }
                 workLastFinished = new Date();
             }

@@ -4,7 +4,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -22,34 +21,26 @@ public class Queue<T> {
     private Logger logger = LoggerFactory.getLogger(Queue.class);
 
     private PlatformTransactionManager platformTransactionManager;
-    private String name;
+    private String queueName;
     private int maxJsonLength;
     private Class<T> clazzOfItem;
     private DatabaseType databaseType;
     private JdbcTemplate jdbcTemplate;
     private ObjectMapper mapper;
 
-    public Queue(DataSource dataSource, Class<T> clazzOfItem) {
-        this(dataSource, 512, clazzOfItem, clazzOfItem.getName().replace('.', '_').toLowerCase());
-    }
-
-    public Queue(DataSource dataSource, int maxJsonLength, Class<T> clazzOfItem, String queueName) {
-        this(dataSource, new DataSourceTransactionManager(dataSource), maxJsonLength, clazzOfItem, queueName);
-    }
-
-    public Queue(DataSource dataSource, PlatformTransactionManager platformTransactionManager, int maxJsonLength,  Class<T> clazzOfItem, String queueName) {
+    protected Queue(DataSource dataSource, PlatformTransactionManager platformTransactionManager, int maxJsonLength,  Class<T> clazzOfItem, String queueName) {
         this.mapper = new ObjectMapper();
         this.maxJsonLength = maxJsonLength;
         this.clazzOfItem = clazzOfItem;
         this.platformTransactionManager = platformTransactionManager;
-        this.name = queueName;
+        this.queueName = queueName;
         this.databaseType = DatabaseTypeFactory.getDataBaseType(dataSource);
         this.jdbcTemplate = new JdbcTemplate(dataSource);
         createTableIfNotExists();
     }
 
     private String getQueueTableName() {
-        return "queue_"+name;
+        return queueName;
     }
 
     private TransactionStatus createTransactionStatus() {

@@ -1,6 +1,5 @@
 package se.parze.sdbq;
 
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -27,8 +26,12 @@ public class QueueTest {
 
     @Test
     public void testQueuePojo() throws Exception {
-        Queue<MyPojo> queue = new Queue<MyPojo>(dataSource, MyPojo.class);
+        Queue<MyPojo> queue = new QueueBuilder()
+                .setDataSource(dataSource)
+                .setClassOfItem(MyPojo.class)
+                .build();
         assertThat(queue.getQueueSize()).isEqualTo(0);
+        //
         queue.addItem(new MyPojo(1, "one"));
         assertThat(queue.getQueueSize()).isEqualTo(1);
         MyPojo myPojo = queue.getAndLockNextItem().getItem();
@@ -38,7 +41,10 @@ public class QueueTest {
 
     @Test
     public void testQueueLong() throws Exception {
-        Queue<Long> queue = new Queue(dataSource, Long.class);
+        Queue<Long> queue = new QueueBuilder()
+                .setDataSource(dataSource)
+                .setClassOfItem(Long.class)
+                .build();
 
         assertThat(queue.getQueueSize()).isEqualTo(0);
         queue.addItem(10L);
@@ -67,41 +73,47 @@ public class QueueTest {
 
     @Test
     public void testQueueMultiThreaded() throws Exception {
-        Queue<Long> queue = new Queue<Long>(dataSource, Long.class);
+        Queue<Long> queue = new QueueBuilder()
+                .setDataSource(dataSource)
+                .setClassOfItem(Long.class)
+                .build();
+        assertThat(queue.getQueueSize()).isEqualTo(0);
+
         //
-        Agents<TestAgent> agents = new Agents<TestAgent>();
+        Workers<TestWorker> workers = new Workers<TestWorker>();
         for (int i = 0; i < 10; i++) {
-            agents.addAgent(new TestAgent("agent_"+i, queue));
+            workers.addWorker(new TestWorker("Worker_" + i, queue));
         }
-        agents.startAgents();
+        workers.startWorkers();
 
         //
         int totalItemCount = 100;
         for (int i = 0; i < totalItemCount/2; i++) {
             queue.addItem(new Long(i+50));
         }
-        agents.notifyAgentsThatWorkIsReadyForProcessing();
+        workers.notifyWorkersThatWorkIsReadyForProcessing();
         for (int i = 0; i < totalItemCount/2; i++) {
             queue.addItem(new Long(i+50));
         }
-        agents.waitUntilAllAgentsAreDone();
+        workers.notifyWorkersThatWorkIsReadyForProcessing();
+        workers.waitUntilAllWorkersAreDone();
 
         //
         int totalWorkCount = 0;
-        for (TestAgent testAgent : agents.getAgents()) {
-            totalWorkCount += testAgent.getWorkCount();
-            testAgent.stopAgent();
+        for (TestWorker testWorker : workers.getWorkers()) {
+            totalWorkCount += testWorker.getWorkCount();
+            testWorker.stopWorker();
         }
         assertThat(totalWorkCount).isEqualTo(totalItemCount);
 
     }
 
 
-    public static class TestAgent extends Agent {
-        private Logger logger = LoggerFactory.getLogger(TestAgent.class);
+    public static class TestWorker extends Worker {
+        private Logger logger = LoggerFactory.getLogger(TestWorker.class);
         private int workCount = 0;
         private Queue queue;
-        public TestAgent(String name, Queue queue) {
+        public TestWorker(String name, Queue queue) {
             super(name);
             this.queue = queue;
         }
