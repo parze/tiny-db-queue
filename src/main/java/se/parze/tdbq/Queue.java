@@ -4,6 +4,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -64,7 +65,7 @@ public class Queue<T> {
         try {
             return mapper.writeValueAsString(item);
         } catch (IOException e) {
-            throw new TinyDbQueueException("Failed to parse item to Json.", e);
+            throw new TdbqException("Failed to parse item to Json.", e);
         }
     }
 
@@ -72,7 +73,7 @@ public class Queue<T> {
         try {
             return mapper.readValue(str, this.clazzOfItem);
         } catch (IOException e) {
-            throw new TinyDbQueueException("Failed to parse item to Json.", e);
+            throw new TdbqException("Failed to parse item to Json.", e);
         }
     }
 
@@ -107,6 +108,57 @@ public class Queue<T> {
         jdbcTemplate.update("Delete From " + getQueueTableName() + " Where id=?", queueItem.getId());
         platformTransactionManager.commit(status);
     }
+
+
+
+    public static class Builder<T> {
+
+        private DataSource dataSource;
+        private PlatformTransactionManager platformTransactionManager;
+        private Integer maxJsonLength;
+        private Class<T> clazzOfItem;
+        private String queueName;
+
+        public Builder setDataSource(DataSource dataSource) {
+            this.dataSource = dataSource;
+            return this;
+        }
+
+        public Builder setPlatformTransactionManager(PlatformTransactionManager platformTransactionManager) {
+            this.platformTransactionManager = platformTransactionManager;
+            return this;
+        }
+
+        public Builder setMaxJsonLength(Integer maxJsonLength) {
+            this.maxJsonLength = maxJsonLength;
+            return this;
+        }
+
+        public Builder setClassOfItem(Class<T> clazzOfItem) {
+            this.clazzOfItem = clazzOfItem;
+            return this;
+        }
+
+        public Builder setQueueName(String queueName) {
+            this.queueName = queueName;
+            return this;
+        }
+
+        public Queue<T> build() {
+            if (maxJsonLength == null) {
+                maxJsonLength = 128;
+            }
+            if (queueName == null) {
+                queueName = "queue_"+clazzOfItem.getName().replace('.', '_').toLowerCase();
+            }
+            if (platformTransactionManager == null) {
+                platformTransactionManager = new DataSourceTransactionManager(dataSource);
+            }
+            return new Queue<T>(dataSource, platformTransactionManager, maxJsonLength, clazzOfItem, queueName);
+        }
+
+    }
+
 
 
 }

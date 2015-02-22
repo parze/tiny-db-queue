@@ -10,6 +10,10 @@ import se.parze.tdbq.*;
 
 import javax.sql.DataSource;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import static org.fest.assertions.Assertions.assertThat;
 
 public class QueueTest {
@@ -26,8 +30,47 @@ public class QueueTest {
     }
 
     @Test
+    public void testQueueExecutor() throws InterruptedException {
+        final List<Long> numbers = Collections.synchronizedList(new ArrayList<Long>());
+        QueueExecutor<Long> queueExecutor = new QueueExecutor.Builder<Long>()
+                .setDataSource(dataSource)
+                .setClassOfItem(Long.class)
+                .setRunnableCreator(new QueueExecutor.RunnableCreator<Long>() {
+                    @Override
+                    public Runnable createRunnable(final QueueItem<Long> queueItem, final QueueExecutor.CallBackWhenDone<Long> callBackWhenDone) {
+                        return new Runnable() {
+                            @Override
+                            public void run() {
+                                logger.info("Adding the number " + queueItem.getItem());
+                                numbers.add(queueItem.getItem());
+                                callBackWhenDone.done(queueItem);
+                            }
+                        };
+                    }
+                }).build();
+        // adding work
+        for (int i = 0; i < 100; i++) {
+            queueExecutor.addItem(100L);
+        }
+        // waiting to complete and shutdown
+        for (int i = 0; i < 100; i++) {
+            if (numbers.size() == 100) {
+                break;
+            }
+            Thread.sleep(10);
+        }
+        queueExecutor.shutdown();
+        // assert
+        assertThat(numbers.size()).isEqualTo(100);
+        for (Long number : numbers) {
+            assertThat(number).isEqualTo(100L);
+        }
+
+    }
+
+    @Test
     public void testQueuePojo() throws Exception {
-        Queue<MyPojo> queue = new QueueBuilder()
+        Queue<MyPojo> queue = new Queue.Builder()
                 .setDataSource(dataSource)
                 .setClassOfItem(MyPojo.class)
                 .build();
@@ -42,7 +85,7 @@ public class QueueTest {
 
     @Test
     public void testQueueLong() throws Exception {
-        Queue<Long> queue = new QueueBuilder()
+        Queue<Long> queue = new Queue.Builder()
                 .setDataSource(dataSource)
                 .setClassOfItem(Long.class)
                 .build();
@@ -74,7 +117,7 @@ public class QueueTest {
 
     @Test
     public void testQueueMultiThreaded() throws Exception {
-        Queue<Long> queue = new QueueBuilder()
+        Queue<Long> queue = new Queue.Builder()
                 .setDataSource(dataSource)
                 .setClassOfItem(Long.class)
                 .build();

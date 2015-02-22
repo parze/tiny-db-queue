@@ -26,6 +26,6 @@ public class DatabaseTypeFactory {
             }
         }
         //
-        throw new TinyDbQueueException("Failed to find database type for given data source.");
+        throw new TdbqException("Failed to find database type for given data source.");
     }
 }
