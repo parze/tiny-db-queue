@@ -1,4 +1,4 @@
-package se.parze.sdbq;
+package se.parze.tdbq;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -12,10 +12,10 @@ public class DatabaseTypeFactory {
 
     static {
         databaseTypeList = new ArrayList<DatabaseType>();
-        databaseTypeList.add(new DatabaseTypeHSql());
-        databaseTypeList.add(new DatabaseTypeH2());
-        databaseTypeList.add(new DatabaseTypeMySql());
-        databaseTypeList.add(new DatabaseTypePostgresSql());
+        databaseTypeList.add(new DatabaseType.HSql());
+        databaseTypeList.add(new DatabaseType.H2());
+        databaseTypeList.add(new DatabaseType.MySql());
+        databaseTypeList.add(new DatabaseType.PostgresSql());
     }
 
     public static DatabaseType getDataBaseType(DataSource dataSource) {
@@ -26,7 +26,6 @@ public class DatabaseTypeFactory {
             }
         }
         //
-        throw new SimpleDbQueueException("Failed to find database type for data source.");
+        throw new TinyDbQueueException("Failed to find database type for given data source.");
     }
-
 }

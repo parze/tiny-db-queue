@@ -1,4 +1,4 @@
-package se.parze.sdbq;
+package se.parze.tdbq;
 
 public class QueueItem<T> {
 

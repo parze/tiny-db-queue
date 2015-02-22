@@ -1,4 +1,4 @@
-package se.parze.sdbq;
+package se.parze.tdbq;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
@@ -64,7 +64,7 @@ public class Queue<T> {
         try {
             return mapper.writeValueAsString(item);
         } catch (IOException e) {
-            throw new SimpleDbQueueException("Failed to parse item to Json.", e);
+            throw new TinyDbQueueException("Failed to parse item to Json.", e);
         }
     }
 
@@ -72,7 +72,7 @@ public class Queue<T> {
         try {
             return mapper.readValue(str, this.clazzOfItem);
         } catch (IOException e) {
-            throw new SimpleDbQueueException("Failed to parse item to Json.", e);
+            throw new TinyDbQueueException("Failed to parse item to Json.", e);
         }
     }
 

@@ -1,4 +1,4 @@
-package se.parze.sdbq;
+package se.parze.tdbq;
 
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;

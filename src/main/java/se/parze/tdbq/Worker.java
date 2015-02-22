@@ -1,4 +1,4 @@
-package se.parze.sdbq;
+package se.parze.tdbq;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,7 +7,7 @@ import java.util.Date;
 
 public abstract class Worker {
 
-    private Logger logger = LoggerFactory.getLogger(se.parze.sdbq.Worker.class);
+    private Logger logger = LoggerFactory.getLogger(Worker.class);
 
     private WorkerThread workerThread;
 
