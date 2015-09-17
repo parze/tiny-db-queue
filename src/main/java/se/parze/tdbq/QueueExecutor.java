@@ -31,7 +31,6 @@ public class QueueExecutor<T> {
         //
         this.executorService = Executors.newFixedThreadPool(threadPoolSize);
         this.callBackWhenDone = new CallBackWhenDone<T>() {
-            @Override
             public void done(QueueItem<T> queueItem) {
                 QueueExecutor.this.queue.removeItem(queueItem);
             }

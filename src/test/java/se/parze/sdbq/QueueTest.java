@@ -22,22 +22,22 @@ public class QueueTest {
 
     private Logger logger = LoggerFactory.getLogger(QueueTest.class);
 
-    private static BasicDataSource dataSource;
+    private static DataSource dataSource;
 
     @BeforeClass
     public static void setupBeforeClass() {
-        /*
+
         dataSource = new EmbeddedDatabaseBuilder().
                 setType(EmbeddedDatabaseType.H2).
                 build();
-        */
 
+        /*
         dataSource = new BasicDataSource();
         dataSource.setDriverClassName("oracle.jdbc.driver.OracleDriver");
         dataSource.setUsername("LEO");
         dataSource.setPassword("l#0p@rd");
         dataSource.setUrl("jdbc:oracle:thin:@bil-dev1.db.is.comhem.com:1521/BILDEV1");
-
+        */
     }
 
     @Test
@@ -47,10 +47,8 @@ public class QueueTest {
                 .setDataSource(dataSource)
                 .setClassOfItem(Long.class)
                 .setRunnableCreator(new QueueExecutor.RunnableCreator<Long>() {
-                    @Override
                     public Runnable createRunnable(final QueueItem<Long> queueItem, final QueueExecutor.CallBackWhenDone<Long> callBackWhenDone) {
                         return new Runnable() {
-                            @Override
                             public void run() {
                                 logger.info("Adding the number " + queueItem.getItem());
                                 numbers.add(queueItem.getItem());
