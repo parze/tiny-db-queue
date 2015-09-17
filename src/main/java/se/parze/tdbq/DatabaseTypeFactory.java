@@ -16,6 +16,7 @@ public class DatabaseTypeFactory {
         databaseTypeList.add(new DatabaseType.H2());
         databaseTypeList.add(new DatabaseType.MySql());
         databaseTypeList.add(new DatabaseType.PostgresSql());
+        databaseTypeList.add(new DatabaseType.Oracle());
     }
 
     public static DatabaseType getDataBaseType(DataSource dataSource) {

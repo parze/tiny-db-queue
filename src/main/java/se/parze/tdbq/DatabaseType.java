@@ -14,6 +14,8 @@ public abstract class DatabaseType {
     public abstract String getSqlSelectForUpdate(String queueTableName);
 
 
+
+
     public static class HSql extends DatabaseType {
         @Override
         public boolean dataSourceBelongToType(JdbcTemplate jdbcTemplate) {
@@ -42,6 +44,19 @@ public abstract class DatabaseType {
                     "For Update";
         }
     }
+
+    public static class Oracle extends H2 {
+        @Override
+        public boolean dataSourceBelongToType(JdbcTemplate jdbcTemplate) {
+            try {
+                Map<String, Object> result = jdbcTemplate.queryForMap("SELECT * FROM v$version WHERE banner LIKE 'Oracle%'");
+                return result != null && result.size() == 1 && result.containsKey("BANNER");
+            } catch (Exception e) {
+                return false;
+            }
+        }
+    }
+
 
     public static class H2 extends HSql {
         @Override

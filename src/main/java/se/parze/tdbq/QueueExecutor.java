@@ -90,6 +90,10 @@ public class QueueExecutor<T> {
         }
     }
 
+    public Queue<T> getQueue() {
+        return this.queue;
+    }
+
     public interface CallBackWhenDone<T> {
         public void done(QueueItem<T> queueItem);
     }

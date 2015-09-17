@@ -15,18 +15,29 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.fest.assertions.Assertions.assertThat;
+import org.apache.commons.dbcp.BasicDataSource;
+
 
 public class QueueTest {
 
     private Logger logger = LoggerFactory.getLogger(QueueTest.class);
 
-    private static DataSource dataSource;
+    private static BasicDataSource dataSource;
 
     @BeforeClass
     public static void setupBeforeClass() {
+        /*
         dataSource = new EmbeddedDatabaseBuilder().
                 setType(EmbeddedDatabaseType.H2).
                 build();
+        */
+
+        dataSource = new BasicDataSource();
+        dataSource.setDriverClassName("oracle.jdbc.driver.OracleDriver");
+        dataSource.setUsername("LEO");
+        dataSource.setPassword("l#0p@rd");
+        dataSource.setUrl("jdbc:oracle:thin:@bil-dev1.db.is.comhem.com:1521/BILDEV1");
+
     }
 
     @Test
