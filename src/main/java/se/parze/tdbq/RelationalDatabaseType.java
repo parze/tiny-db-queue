@@ -5,7 +5,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import java.util.List;
 import java.util.Map;
 
-public abstract class DatabaseType {
+public abstract class RelationalDatabaseType {
 
     public abstract boolean dataSourceBelongToType(JdbcTemplate jdbcTemplate);
 
@@ -14,9 +14,7 @@ public abstract class DatabaseType {
     public abstract String getSqlSelectForUpdate(String queueTableName);
 
 
-
-
-    public static class HSql extends DatabaseType {
+    public static class HSql extends RelationalDatabaseType {
         @Override
         public boolean dataSourceBelongToType(JdbcTemplate jdbcTemplate) {
             try {
@@ -69,7 +67,7 @@ public abstract class DatabaseType {
         }
     }
 
-    public static class MySql extends DatabaseType {
+    public static class MySql extends RelationalDatabaseType {
         @Override
         public boolean dataSourceBelongToType(JdbcTemplate jdbcTemplate) {
             try {

@@ -15,12 +15,11 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.fest.assertions.Assertions.assertThat;
-import org.apache.commons.dbcp.BasicDataSource;
 
 
-public class QueueTest {
+public class H2QueueTest {
 
-    private Logger logger = LoggerFactory.getLogger(QueueTest.class);
+    private Logger logger = LoggerFactory.getLogger(H2QueueTest.class);
 
     private static DataSource dataSource;
 
@@ -43,10 +42,13 @@ public class QueueTest {
     @Test
     public void testQueueExecutor() throws InterruptedException {
         final List<Long> numbers = Collections.synchronizedList(new ArrayList<Long>());
+        Queue<Long> queue = new RelationalDatabaseQueue.Builder<Long>()
+                .withClassOfItem(Long.class)
+                .withDataSource(dataSource)
+                .build();
         QueueExecutor<Long> queueExecutor = new QueueExecutor.Builder<Long>()
-                .setDataSource(dataSource)
-                .setClassOfItem(Long.class)
-                .setRunnableCreator(new QueueExecutor.RunnableCreator<Long>() {
+                .withQueue(queue)
+                .withRunnableCreator(new QueueExecutor.RunnableCreator<Long>() {
                     public Runnable createRunnable(final QueueItem<Long> queueItem, final QueueExecutor.CallBackWhenDone<Long> callBackWhenDone) {
                         return new Runnable() {
                             public void run() {
@@ -79,9 +81,9 @@ public class QueueTest {
 
     @Test
     public void testQueuePojo() throws Exception {
-        Queue<MyPojo> queue = new Queue.Builder()
-                .setDataSource(dataSource)
-                .setClassOfItem(MyPojo.class)
+        Queue<MyPojo> queue = new RelationalDatabaseQueue.Builder<MyPojo>()
+                .withDataSource(dataSource)
+                .withClassOfItem(MyPojo.class)
                 .build();
         assertThat(queue.getQueueSize()).isEqualTo(0);
         //
@@ -94,9 +96,9 @@ public class QueueTest {
 
     @Test
     public void testQueueLong() throws Exception {
-        Queue<Long> queue = new Queue.Builder()
-                .setDataSource(dataSource)
-                .setClassOfItem(Long.class)
+        Queue<Long> queue = new RelationalDatabaseQueue.Builder<Long>()
+                .withDataSource(dataSource)
+                .withClassOfItem(Long.class)
                 .build();
 
         assertThat(queue.getQueueSize()).isEqualTo(0);
@@ -126,9 +128,9 @@ public class QueueTest {
 
     @Test
     public void testQueueMultiThreaded() throws Exception {
-        Queue<Long> queue = new Queue.Builder()
-                .setDataSource(dataSource)
-                .setClassOfItem(Long.class)
+        Queue<Long> queue = new RelationalDatabaseQueue.Builder<Long>()
+                .withDataSource(dataSource)
+                .withClassOfItem(Long.class)
                 .build();
         assertThat(queue.getQueueSize()).isEqualTo(0);
 
@@ -159,31 +161,6 @@ public class QueueTest {
         }
         assertThat(totalWorkCount).isEqualTo(totalItemCount);
 
-    }
-
-
-    public static class TestWorker extends Worker {
-        private Logger logger = LoggerFactory.getLogger(TestWorker.class);
-        private int workCount = 0;
-        private Queue queue;
-        public TestWorker(String name, Queue queue) {
-            super(name);
-            this.queue = queue;
-        }
-        @Override
-        public void computeWork() {
-            QueueItem queueItem = queue.getAndLockNextItem();
-            while (queueItem != null) {
-                workCount++;
-                logger.debug(getName() + ": (" + queueItem.getId() + " : " + queueItem.getItem() + ")");
-                queue.removeItem(queueItem);
-                queueItem = queue.getAndLockNextItem();
-            }
-        }
-
-        public int getWorkCount() {
-            return workCount;
-        }
     }
 
     public static class MyPojo {

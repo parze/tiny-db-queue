@@ -94,79 +94,45 @@ public class QueueExecutor<T> {
     }
 
     public interface CallBackWhenDone<T> {
-        public void done(QueueItem<T> queueItem);
+        void done(QueueItem<T> queueItem);
     }
 
     public interface RunnableCreator<T> {
-        public Runnable createRunnable(QueueItem<T> queueItem, CallBackWhenDone<T> callBackWhenDone);
+        Runnable createRunnable(QueueItem<T> queueItem, CallBackWhenDone<T> callBackWhenDone);
     }
 
 
     public static class Builder<T> {
 
-        private DataSource dataSource;
-        private PlatformTransactionManager platformTransactionManager;
-        private Integer maxJsonLength;
-        private Class<T> clazzOfItem;
-        private String queueName;
-
+        private Queue<T> queue;
         private RunnableCreator<T> runnableCreator;
         private Long checkQueueInterval;
         private Integer threadPoolSize;
 
-        public Builder setDataSource(DataSource dataSource) {
-            this.dataSource = dataSource;
+        public Builder withQueue(Queue<T> queue) {
+            this.queue = queue;
             return this;
         }
 
-        public Builder setPlatformTransactionManager(PlatformTransactionManager platformTransactionManager) {
-            this.platformTransactionManager = platformTransactionManager;
-            return this;
-        }
-
-        public Builder setMaxJsonLength(Integer maxJsonLength) {
-            this.maxJsonLength = maxJsonLength;
-            return this;
-        }
-
-        public Builder setClassOfItem(Class<T> clazzOfItem) {
-            this.clazzOfItem = clazzOfItem;
-            return this;
-        }
-
-        public Builder setQueueName(String queueName) {
-            this.queueName = queueName;
-            return this;
-        }
-
-        public Builder setRunnableCreator(RunnableCreator<T> runnableCreator) {
+        public Builder withRunnableCreator(RunnableCreator<T> runnableCreator) {
             this.runnableCreator = runnableCreator;
             return this;
         }
 
-        public Builder setCheckQueueInterval(long checkQueueInterval) {
+        public Builder withCheckQueueInterval(long checkQueueInterval) {
             this.checkQueueInterval = checkQueueInterval;
             return this;
         }
 
-        public Builder setThreadPoolSize(int threadPoolSize) {
+        public Builder withThreadPoolSize(int threadPoolSize) {
             this.threadPoolSize = threadPoolSize;
             return this;
         }
 
         public QueueExecutor<T> build() {
-            //
-            if (maxJsonLength == null) {
-                maxJsonLength = 128;
+            if (this.queue == null) {
+                throw new TdbqException("Queue must be set.");
             }
-            if (queueName == null) {
-                queueName = "queue_"+clazzOfItem.getName().replace('.', '_').toLowerCase();
-            }
-            if (platformTransactionManager == null) {
-                platformTransactionManager = new DataSourceTransactionManager(dataSource);
-            }
-            Queue<T> queue = new Queue<T>(dataSource, platformTransactionManager, maxJsonLength,  clazzOfItem, queueName);
-            //
             if (checkQueueInterval == null) {
                 checkQueueInterval = -1L;
             }
