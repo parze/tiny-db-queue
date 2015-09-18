@@ -1,4 +1,4 @@
-package se.parze.tdbq;
+package com.github.parze;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

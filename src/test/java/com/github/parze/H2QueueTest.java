@@ -1,4 +1,4 @@
-package se.parze.sdbq;
+package com.github.parze;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
-import se.parze.tdbq.*;
 
 import javax.sql.DataSource;
 
@@ -25,18 +24,9 @@ public class H2QueueTest {
 
     @BeforeClass
     public static void setupBeforeClass() {
-
         dataSource = new EmbeddedDatabaseBuilder().
                 setType(EmbeddedDatabaseType.H2).
                 build();
-
-        /*
-        dataSource = new BasicDataSource();
-        dataSource.setDriverClassName("oracle.jdbc.driver.OracleDriver");
-        dataSource.setUsername("LEO");
-        dataSource.setPassword("l#0p@rd");
-        dataSource.setUrl("jdbc:oracle:thin:@bil-dev1.db.is.comhem.com:1521/BILDEV1");
-        */
     }
 
     @Test

@@ -1,4 +1,4 @@
-package se.parze.tdbq;
+package com.github.parze;
 
 import java.util.ArrayList;
 import java.util.Date;

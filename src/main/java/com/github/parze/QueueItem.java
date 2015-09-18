@@ -1,4 +1,4 @@
-package se.parze.tdbq;
+package com.github.parze;
 
 public class QueueItem<T> {
 

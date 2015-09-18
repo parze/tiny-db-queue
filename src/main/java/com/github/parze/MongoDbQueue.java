@@ -1,4 +1,4 @@
-package se.parze.tdbq;
+package com.github.parze;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -6,9 +6,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteResult;
-import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

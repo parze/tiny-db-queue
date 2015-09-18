@@ -1,11 +1,9 @@
-package se.parze.sdbq;
+package com.github.parze;
 
 import com.mongodb.MongoClient;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import se.parze.tdbq.MongoDbQueue;
-import se.parze.tdbq.Workers;
 
 import static org.fest.assertions.Assertions.assertThat;
 

@@ -1,10 +1,7 @@
-package se.parze.sdbq;
+package com.github.parze;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.parze.tdbq.Queue;
-import se.parze.tdbq.QueueItem;
-import se.parze.tdbq.Worker;
 
 public class TestWorker  extends Worker {
     private Logger logger = LoggerFactory.getLogger(TestWorker.class);

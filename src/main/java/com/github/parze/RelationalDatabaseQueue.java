@@ -1,6 +1,5 @@
-package se.parze.tdbq;
+package com.github.parze;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -11,7 +10,6 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.sql.DataSource;
-import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
